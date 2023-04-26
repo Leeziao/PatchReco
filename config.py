@@ -1,4 +1,5 @@
 from pathlib import Path
+import os
 
 PROJECT_ROOT = Path(__file__).resolve().parent
 
@@ -8,7 +9,10 @@ sRAWDATADIR = RAWDATADIR / 'security_patch'
 pRAWDATADIR = RAWDATADIR / 'positives'
 nRAWDATADIR = RAWDATADIR / 'negatives'
 
-RESULTDIR = PROJECT_ROOT / 'result'
+if os.environ.get('OUTPUT_DIR',None) is None:
+    RESULTDIR = PROJECT_ROOT / 'result'
+else:
+    RESULTDIR = Path(os.environ['OUTPUT_DIR'])
 
 CHECKPOINTDIR = PROJECT_ROOT / 'trainer'
 msgCHECKPOINTDIR = CHECKPOINTDIR / 'msgTrainer'

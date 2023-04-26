@@ -3,3 +3,5 @@
 !*.py
 !hp.json
 !.gitignore
+!*.md
+!*.sh
