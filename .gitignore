@@ -4,4 +4,6 @@
 !hp.json
 !.gitignore
 !*.md
-!*.sh
+!train.sh
+!env.yaml
+!cluster_job/

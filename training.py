@@ -21,7 +21,7 @@ def trainModel(modelType: str):
     assert(modelType in ['msg', 'code'])
 
     PD = dataset.PatchDataset()
-    trainData = PD.getSplit('test', modelType)
+    trainData = PD.getSplit('train', modelType)
     # testData = PD.getSplit('test', modelType)
     evalData = PD.getSplit('eval', modelType)
 
