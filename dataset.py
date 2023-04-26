@@ -1,6 +1,7 @@
 import os
 import re
 import numpy as np
+import random
 
 from transformers import AutoTokenizer
 import datasets
@@ -11,8 +12,16 @@ from typing import List
 import json
 import torch.utils.data
 
+from myCmd import CMD
 from config import *
 import utils
+
+@utils.statusNotifier
+def preprocessZipData():
+    for filePath in RAWDATADIR.glob('**/*'):
+        if filePath.name.endswith('.zip'):
+            CMD(f'unzip {filePath}', path=filePath.parent)()
+            CMD(f'rm {filePath}', path=filePath.parent)()
 
 @utils.statusNotifier
 def createRawDataset():
@@ -189,6 +198,7 @@ def splitProcessedData(testSplit=0.1, evalSplit=0.1):
         return
 
     d = json.loads(processedDataFilePath.read_text())
+    random.shuffle(d)
     dSize = len(d)
     testSize = int(dSize * testSplit)
     evalSize = int(dSize * evalSplit)
@@ -291,11 +301,12 @@ def buildDataLoader():
     # return loader
 
 if __name__ == '__main__':
+    preprocessZipData()
     createRawDataset()
     processRawDataset()
     splitProcessedData()
 
     patch = PatchDataset()
-    patch.getSplit('train', 'code')
+    # patch.getSplit('train', 'code')
 
     # buildDataLoader()
