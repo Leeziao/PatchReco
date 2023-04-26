@@ -13,6 +13,7 @@ conda activate patch_reco
 The key packages are `torch, transformers, evaluate, datasets`
 
 ### training
-    ```bash
-    bash train.sh
-    ```
+
+```bash
+bash train.sh
+```
