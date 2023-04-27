@@ -4,7 +4,7 @@
 	"allBatchSize": 8,
 
 	"epoch": 4,
-	"logging_steps": 1,
+	"logging_steps": 20,
 	"save_steps": 200,
 	"ignore_data_skip": true,
 
