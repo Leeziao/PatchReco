@@ -4,6 +4,8 @@ import os
 PROJECT_ROOT = Path(__file__).resolve().parent
 
 DATADIR = PROJECT_ROOT / 'data'
+hgDATADIR = DATADIR / 'hg'
+
 RAWDATADIR = DATADIR / 'raw'
 sRAWDATADIR = RAWDATADIR / 'security_patch'
 pRAWDATADIR = RAWDATADIR / 'positives'
@@ -21,6 +23,7 @@ else:
 
 msgCHECKPOINTDIR = CHECKPOINTDIR / 'msgTrainer'
 codeCHECKPOINTDIR = CHECKPOINTDIR / 'codeTrainer'
+allCHECKPOINTDIR = CHECKPOINTDIR / 'allTrainer'
 
 DATADIR.mkdir(exist_ok=True, parents=True)
 RESULTDIR.mkdir(exist_ok=True, parents=True)
