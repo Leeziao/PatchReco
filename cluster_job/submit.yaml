@@ -3,8 +3,9 @@ description: patch reco
 environment:
   image: jinchaolove/dl:msra-torch1.12-conda3-cuda11.6-cudnn8-ubuntu20.04 
   setup:
-    - export OUTPUT_DIR='/blob/v-yanpeng/others/lza/'
-    - pip install datasets evaluate 
+    - pip install --user datasets evaluate 
+    - export OUTPUT_DIR="/blob/v-yanpeng/others/lza/result/"
+    - export CHECKPOINT_DIR="/blob/v-yanpeng/others/lza/checkpoints/"
 
 target:
   name: msroctovc
@@ -22,5 +23,4 @@ jobs:
   - name:  patch_reco 
     sku: 1x16G1-V100 
     command:
-      - python main.py msg
-      - python main.py code
+      - bash train.sh

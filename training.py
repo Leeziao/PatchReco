@@ -39,7 +39,7 @@ def trainModel(modelType: str):
         evaluation_strategy='epoch',
         eval_steps=1,
 
-        report_to='tensorboard',
+        report_to='azure_ml',
         logging_strategy='steps',
         logging_steps=utils.hpJ['logging_steps'],
 

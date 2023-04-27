@@ -14,7 +14,11 @@ if os.environ.get('OUTPUT_DIR',None) is None:
 else:
     RESULTDIR = Path(os.environ['OUTPUT_DIR'])
 
-CHECKPOINTDIR = PROJECT_ROOT / 'trainer'
+if os.environ.get('CHECKPOINT_DIR',None) is None:
+    CHECKPOINTDIR = PROJECT_ROOT / 'trainer'
+else:
+    CHECKPOINTDIR = Path(os.environ['CHECKPOINT_DIR'])
+
 msgCHECKPOINTDIR = CHECKPOINTDIR / 'msgTrainer'
 codeCHECKPOINTDIR = CHECKPOINTDIR / 'codeTrainer'
 
