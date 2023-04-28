@@ -188,11 +188,29 @@ def processRawDataset():
         if len(code) > keepHunkNum: code = code[:keepHunkNum]
         else: code = code + ['' for _ in range(keepHunkNum - len(code))]
         return code
+    
+    def rewriteHunk(code: List[str]):
+        def _rewriteHunk(hunk: str):
+            lines = hunk.split('\n')
+            postHunk, preHunk = [], []
+            for line in lines:
+                if line.startswith('+'):
+                    line = ' ' + line[1:]
+                    postHunk.append(line)
+                elif line.startswith('-'):
+                    line= ' ' + line[1:]
+                    preHunk.append(line)
+                else:
+                    postHunk.append(line)
+                    preHunk.append(line)
+            return ['\n'.join(preHunk), '\n'.join(postHunk)]
+        return [_rewriteHunk(c) for c in code]
 
     msgs = [rewriteMsg(msg) for msg in msgs]
     codes = [rewriteCode(code) for code in codes]
+    hunks = [rewriteHunk(code) for code in codes]
 
-    processedJ = list(zip(msgs, codes, labels))
+    processedJ = list(zip(msgs, codes, labels, hunks))
     processedDataFilePath.write_text(json.dumps(processedJ, indent=2))
 
 @utils.statusNotifier
@@ -276,15 +294,38 @@ class PatchDataset:
                 index += hn
             result['labels'] = torch.LongTensor([d[2] for d in data])
             return datasets.Dataset.from_dict(result)
+    def getHunkSplit(self, splitType: str):
+        data = self.dataset[splitType]
+        hunks = np.array([d[3] for d in data])
+        labels = torch.LongTensor([d[2] for d in data])
+
+        hunkShape = hunks.shape
+        hunks = self.codeTokenizer(hunks.reshape(-1).tolist(),
+                            truncation=True,
+                            padding='max_length',
+                            add_special_tokens=True,
+                            max_length=utils.hpJ['codeTokenLength'],
+                            return_tensors='np',
+
+                            return_attention_mask=True,
+                            return_special_tokens_mask=True,
+                            return_token_type_ids=True)
+        result = dict()
+        for k in hunks.keys():
+            result[k] = hunks[k].reshape(*hunkShape, -1).tolist()
+        result['labels'] = labels
+        return datasets.Dataset.from_dict(result)
 
     def getSplit(self, splitType: str='train', dataType: str='msg'):
         assert(splitType in ['train', 'test', 'eval'])
-        assert(dataType in ['msg', 'code', 'all'])
+        assert(dataType in ['msg', 'code', 'all', 'hunk'])
 
         if dataType == 'msg':
             return self.getMsgSplit(splitType)
         elif dataType == 'code':
             return self.getCodeSplit(splitType)
+        elif dataType == 'hunk':
+            return self.getHunkSplit(splitType)
         elif dataType == 'all':
             msgSplit = self.getMsgSplit(splitType).to_dict()
             codeSplit = self.getCodeSplit(splitType, flatten=False).to_dict()
@@ -307,7 +348,7 @@ class PatchDataset:
 
 @utils.statusNotifier
 def createHGDataset(dataType: str='msg'):
-    assert(dataType in ['msg', 'code', 'all'])
+    assert(dataType in ['msg', 'code', 'all', 'hunk'])
     targetDirPath = hgDATADIR / dataType
     if targetDirPath.exists(): return
 
@@ -340,7 +381,4 @@ if __name__ == '__main__':
     processRawDataset()
     splitProcessedData()
 
-    createHGDataset('all')
-
-    dd = getHGDataset('all')['eval']
-    print(dd)
+    createHGDataset('hunk')

@@ -61,7 +61,7 @@ def trainSeperateModel(modelType: str):
         dataloader_drop_last=True,
     )
 
-    metric = evaluate.load('accuracy')
+    metric = evaluate.combine(['accuracy', 'f1', 'precision', 'recall'])
     def compute_metric(eval_pred):
         logits, labels = eval_pred
         pred = np.argmax(logits, axis=-1)
@@ -137,7 +137,7 @@ def trainAllModel():
         dataloader_drop_last=True,
     )
 
-    metric = evaluate.load('accuracy')
+    metric = evaluate.combine(['accuracy', 'f1', 'precision', 'recall'])
     def compute_metric(eval_pred):
         logits, labels = eval_pred
         pred = np.argmax(logits, axis=-1)
