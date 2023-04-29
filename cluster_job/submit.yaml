@@ -20,7 +20,7 @@ storage:
       mount_dir: /blob
 
 jobs:
-  - name:  patch_reco 
+  - name:  patch_reco_all 
     sku: 1x16G1-V100 
     command:
       - bash train.sh
