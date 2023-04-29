@@ -3,11 +3,11 @@ import training
 import evaluating
 import argparse
 
-from transformers import RobertaForSequenceClassification
-
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    parser.add_argument('modelType', choices=['code', 'msg', 'all'], type=str)
+    parser.add_argument('modelType',
+                        choices=['code', 'msg', 'all', "hunk", 'allHunk'],
+                        type=str)
     args = parser.parse_args()
 
     dataset.preprocessZipData()
@@ -18,8 +18,8 @@ if __name__ == '__main__':
     modelType = args.modelType
     dataset.createHGDataset(modelType)
 
-    if modelType == 'all':
-        training.trainAllModel()
+    if modelType in ['all', 'allHunk']:
+        training.trainAllModel(modelType)
     else:
         training.trainSeperateModel(args.modelType)
     # evaluating.evaluteSeperateModel(args.modelType)

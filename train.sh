@@ -1,3 +1,3 @@
-python main.py code 
+python main.py hunk
 
-python main.py msg 
+python main.py allHunk
