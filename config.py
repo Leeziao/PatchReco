@@ -23,7 +23,9 @@ else:
 
 msgCHECKPOINTDIR = CHECKPOINTDIR / 'msgTrainer'
 codeCHECKPOINTDIR = CHECKPOINTDIR / 'codeTrainer'
+hunkCHECKPOINTDIR = CHECKPOINTDIR / 'hunkTrainer'
 allCHECKPOINTDIR = CHECKPOINTDIR / 'allTrainer'
+allHunkCHECKPOINTDIR = CHECKPOINTDIR / 'allHunkTrainer'
 
 DATADIR.mkdir(exist_ok=True, parents=True)
 RESULTDIR.mkdir(exist_ok=True, parents=True)

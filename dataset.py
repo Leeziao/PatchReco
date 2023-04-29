@@ -188,11 +188,29 @@ def processRawDataset():
         if len(code) > keepHunkNum: code = code[:keepHunkNum]
         else: code = code + ['' for _ in range(keepHunkNum - len(code))]
         return code
+    
+    def rewriteHunk(code: List[str]):
+        def _rewriteHunk(hunk: str):
+            lines = hunk.split('\n')
+            postHunk, preHunk = [], []
+            for line in lines:
+                if line.startswith('+'):
+                    line = ' ' + line[1:]
+                    postHunk.append(line)
+                elif line.startswith('-'):
+                    line= ' ' + line[1:]
+                    preHunk.append(line)
+                else:
+                    postHunk.append(line)
+                    preHunk.append(line)
+            return ['\n'.join(preHunk), '\n'.join(postHunk)]
+        return [_rewriteHunk(c) for c in code]
 
     msgs = [rewriteMsg(msg) for msg in msgs]
     codes = [rewriteCode(code) for code in codes]
+    hunks = [rewriteHunk(code) for code in codes]
 
-    processedJ = list(zip(msgs, codes, labels))
+    processedJ = list(zip(msgs, codes, labels, hunks))
     processedDataFilePath.write_text(json.dumps(processedJ, indent=2))
 
 @utils.statusNotifier
@@ -277,14 +295,62 @@ class PatchDataset:
             result['labels'] = torch.LongTensor([d[2] for d in data])
             return datasets.Dataset.from_dict(result)
 
+    def getHunkSplit(self, splitType: str):
+        data = self.dataset[splitType]
+        hunks, hunks_f = [d[3] for d in data], []
+        hunkShape = [len(hunks), len(hunks[0]), len(hunks[0][0])]
+        hunks_f = [item for h in hunks for hh in h for item in hh]
+
+        labels = torch.LongTensor([d[2] for d in data])
+
+        hunks = self.codeTokenizer(hunks_f,
+                            truncation=True,
+                            padding='max_length',
+                            add_special_tokens=True,
+                            max_length=utils.hpJ['codeTokenLength'],
+                            return_tensors='np',
+
+                            return_attention_mask=True,
+                            return_special_tokens_mask=True,
+                            return_token_type_ids=True)
+        result = dict()
+        for k in hunks.keys():
+            result[k] = hunks[k].reshape(hunkShape[0], hunkShape[1] * 2, -1)
+        result['labels'] = labels
+
+        return datasets.Dataset.from_dict(result)
+
+    @utils.statusNotifier
     def getSplit(self, splitType: str='train', dataType: str='msg'):
         assert(splitType in ['train', 'test', 'eval'])
-        assert(dataType in ['msg', 'code', 'all'])
+        assert(dataType in ['msg', 'code', 'all', 'hunk', 'allHunk'])
 
         if dataType == 'msg':
             return self.getMsgSplit(splitType)
         elif dataType == 'code':
             return self.getCodeSplit(splitType)
+        elif dataType == 'hunk':
+            return self.getHunkSplit(splitType)
+        elif dataType == 'allHunk':
+            msgSplit = self.getMsgSplit(splitType).to_dict()
+            hunkSplit = self.getHunkSplit(splitType).to_dict()
+
+            msgLabels = msgSplit['labels']
+            hunkLabels = hunkSplit['labels']
+            equalLabelNum = sum([msgLabels[i] == hunkLabels[i] for i in range(len(msgLabels))])
+            assert(equalLabelNum == len(msgLabels) == len(hunkLabels))
+
+            result = dict()
+            for k in msgSplit.keys():
+                if k == 'labels': continue
+                result[f'msg_{k}'] = msgSplit[k]
+            for k in hunkSplit.keys():
+                if k == 'labels': continue
+                result[f'hunk_{k}'] = hunkSplit[k]
+            result['labels'] = msgLabels
+
+            return datasets.Dataset.from_dict(result)
+
         elif dataType == 'all':
             msgSplit = self.getMsgSplit(splitType).to_dict()
             codeSplit = self.getCodeSplit(splitType, flatten=False).to_dict()
@@ -307,7 +373,7 @@ class PatchDataset:
 
 @utils.statusNotifier
 def createHGDataset(dataType: str='msg'):
-    assert(dataType in ['msg', 'code', 'all'])
+    assert(dataType in ['msg', 'code', 'all', 'hunk', 'allHunk'])
     targetDirPath = hgDATADIR / dataType
     if targetDirPath.exists(): return
 
@@ -326,7 +392,7 @@ def createHGDataset(dataType: str='msg'):
 
 @utils.statusNotifier
 def getHGDataset(dataType: str='msg'):
-    assert(dataType in ['msg', 'code', 'all'])
+    assert(dataType in ['msg', 'code', 'all', 'hunk', 'allHunk'])
     targetDirPath = hgDATADIR / dataType
     assert(targetDirPath.exists())
 
@@ -340,7 +406,8 @@ if __name__ == '__main__':
     processRawDataset()
     splitProcessedData()
 
-    createHGDataset('all')
+    createHGDataset('allHunk')
 
-    dd = getHGDataset('all')['eval']
-    print(dd)
+    d=getHGDataset('allHunk')
+    print(d)
+    print(d)

@@ -1,15 +1,15 @@
 {
 	"msgBatchSize": 16,
-	"codeBatchSize": 16,
+	"codeBatchSize": 2,
 	"allBatchSize": 8,
 
 	"epoch": 4,
 	"logging_steps": 20,
-	"save_steps": 200,
+	"save_steps": 1,
 	"ignore_data_skip": true,
 
 	"msgTokenLength": 300,
 	"codeTokenLength": 512,
 
-	"trainBase": false
+	"trainBase": true
 }
