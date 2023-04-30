@@ -1,7 +1,7 @@
 {
 	"msgBatchSize": 16,
 	"codeBatchSize": 2,
-	"allBatchSize": 8,
+	"allBatchSize": 4,
 
 	"epoch": 4,
 	"logging_steps": 20,
