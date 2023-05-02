@@ -158,9 +158,16 @@ def createRawDataset(fileListInput: str=''):
         fileList = json.loads(Path(fileListInput).read_text())
 
         for filePath in fileList:
+            s = str(filePath)
+            if 'data/raw/negatives' in s:
+                tgtLabel = 0
+            elif 'data/raw/positives' in s or 'data/raw/security_patch' in s:
+                tgtLabel = 1
+            else:
+                raise ValueError("Unknown Label Rule")
             commitMsg = ReadCommitMsg(filePath)
             diffLines = ReadDiffLines(filePath)
-            data.append([commitMsg, diffLines, 0])
+            data.append([commitMsg, diffLines, tgtLabel])
 
     rawDataFilePath.write_text(json.dumps(data, indent=2))
     fileListFilePath.write_text(json.dumps(fileList, indent=2))
