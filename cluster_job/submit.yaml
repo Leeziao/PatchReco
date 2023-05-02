@@ -4,8 +4,8 @@ environment:
   image: jinchaolove/dl:msra-torch1.12-conda3-cuda11.6-cudnn8-ubuntu20.04 
   setup:
     - pip install --user datasets evaluate 
-    - export OUTPUT_DIR="/blob/v-yanpeng/others/lza/result/"
-    - export CHECKPOINT_DIR="/blob/v-yanpeng/others/lza/checkpoints/"
+    - export OUTPUT_DIR="/blob2/v-yanpeng/others/lza/result/"
+    - export CHECKPOINT_DIR="/blob2/v-yanpeng/others/lza/checkpoints/"
 
 target:
   name: msroctovc
@@ -17,10 +17,10 @@ storage:
   output:
       storage_account_name: msralaphilly2
       container_name: ml-la
-      mount_dir: /blob
+      mount_dir: /blob2
 
 jobs:
-  - name:  patch_reco 
+  - name:  patch_reco_hunk2
     sku: 1x16G1-V100 
     command:
       - bash train.sh
