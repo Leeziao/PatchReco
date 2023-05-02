@@ -37,3 +37,8 @@ rawDataFilePath = DATADIR / 'rawData.json'
 processedDataFilePath = DATADIR / 'processedData.json'
 splitDataFilePath = DATADIR / 'splitProcessedData.json'
 
+# --------------- RESULT -------------------- #
+
+fileListFilePath = RESULTDIR / 'fileList.json'
+shuffleFileListFilePath = RESULTDIR / 'fileList_shuffle.json'
+resultFilePath = RESULTDIR / 'evaluateResult.json'

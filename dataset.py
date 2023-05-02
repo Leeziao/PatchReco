@@ -20,8 +20,11 @@ import utils
 def preprocessZipData():
     for filePath in RAWDATADIR.glob('**/*'):
         if filePath.name.endswith('.zip'):
+            pathWithoutExt = filePath.parent / filePath.stem
+            if pathWithoutExt.exists(): continue
+
             CMD(f'unzip {filePath}', path=filePath.parent)()
-            CMD(f'rm {filePath}', path=filePath.parent)()
+            # CMD(f'rm {filePath}', path=filePath.parent)()
 
 @utils.statusNotifier
 def createRawDataset():
@@ -40,7 +43,7 @@ def createRawDataset():
             ]
         ]
     '''
-    if rawDataFilePath.exists(): return
+    if rawDataFilePath.exists() and fileListFilePath.exists(): return
 
     def ReadCommitMsg(filename):
         '''
@@ -123,32 +126,36 @@ def createRawDataset():
         return [''.join(hunk) for hunk in diffLines]
 
     # initialize data.
-    data = []
+    data, fileList = [], []
     # read security patch data.
     for filePath in sRAWDATADIR.glob('**/*'):
-        if not filePath.is_file(): continue
+        if not filePath.is_file() or filePath.suffix == '.zip': continue
 
+        fileList.append(str(filePath.relative_to(PROJECT_ROOT)))
         commitMsg = ReadCommitMsg(filePath)
         diffLines = ReadDiffLines(filePath)
         data.append([commitMsg, diffLines, 1])
 
     # read positive data.
     for filePath in pRAWDATADIR.glob('**/*'):
-        if not filePath.is_file(): continue
+        if not filePath.is_file() or filePath.suffix == '.zip': continue
 
+        fileList.append(str(filePath.relative_to(PROJECT_ROOT)))
         commitMsg = ReadCommitMsg(filePath)
         diffLines = ReadDiffLines(filePath)
         data.append([commitMsg, diffLines, 1])
 
     # read negative data.
     for filePath in nRAWDATADIR.glob('**/*'):
-        if not filePath.is_file(): continue
+        if not filePath.is_file() or filePath.suffix == '.zip': continue
 
+        fileList.append(str(filePath.relative_to(PROJECT_ROOT)))
         commitMsg = ReadCommitMsg(filePath)
         diffLines = ReadDiffLines(filePath)
         data.append([commitMsg, diffLines, 0])
 
     rawDataFilePath.write_text(json.dumps(data, indent=2))
+    fileListFilePath.write_text(json.dumps(fileList, indent=2))
     
     return data
 
@@ -215,27 +222,38 @@ def processRawDataset():
 
 @utils.statusNotifier
 def splitProcessedData(testSplit=0.1, evalSplit=0.1):
-    if splitDataFilePath.exists():
+    if splitDataFilePath.exists() and shuffleFileListFilePath.exists():
         return
 
     d = json.loads(processedDataFilePath.read_text())
-    random.Random(42).shuffle(d)
+    fileList = json.loads(fileListFilePath.read_text())
     dSize = len(d)
+
+    indices = list(range(dSize))
+    random.Random(42).shuffle(indices)
+
     testSize = int(dSize * testSplit)
     evalSize = int(dSize * evalSplit)
     trainSize = dSize - testSize - evalSize
 
-    trainD = d[:trainSize]
-    evalD = d[trainSize: trainSize+evalSize]
-    testD = d[trainSize+evalSize: trainSize+evalSize+testSize]
+    trainIndices = set(indices[:trainSize])
+    evalIndices = set(indices[trainSize: trainSize+evalSize])
+    testIndices = set(indices[trainSize+evalSize: trainSize+evalSize+testSize])
 
-    j = {
-        'train': trainD,
-        'eval': evalD,
-        'test': testD,
-    }
+    trainD = [dd for i, dd in enumerate(d) if i in trainIndices]
+    evalD = [dd for i, dd in enumerate(d) if i in evalIndices]
+    testD = [dd for i, dd in enumerate(d) if i in testIndices]
+
+    trainFileList = [f for i, f in enumerate(fileList) if i in trainIndices]
+    evalFileList = [f for i, f in enumerate(fileList) if i in evalIndices]
+    testFileList = [f for i, f in enumerate(fileList) if i in testIndices]
+
+
+    j = {'train': trainD, 'eval': evalD, 'test': testD}
+    jF = {'train': trainFileList, 'eval': evalFileList, 'test': testFileList}
 
     splitDataFilePath.write_text(json.dumps(j, indent=2))
+    shuffleFileListFilePath.write_text(json.dumps(jF, indent=2))
 
 class PatchDataset:
     def __init__(self):
@@ -406,8 +424,8 @@ if __name__ == '__main__':
     processRawDataset()
     splitProcessedData()
 
-    createHGDataset('allHunk')
+    createHGDataset('code')
 
-    d=getHGDataset('allHunk')
+    d=getHGDataset('code')
     print(d)
     print(d)
