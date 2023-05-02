@@ -423,9 +423,3 @@ if __name__ == '__main__':
     createRawDataset()
     processRawDataset()
     splitProcessedData()
-
-    createHGDataset('code')
-
-    d=getHGDataset('code')
-    print(d)
-    print(d)
