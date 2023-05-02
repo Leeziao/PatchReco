@@ -27,7 +27,7 @@ def preprocessZipData():
             # CMD(f'rm {filePath}', path=filePath.parent)()
 
 @utils.statusNotifier
-def createRawDataset():
+def createRawDataset(fileListInput: str=''):
     '''
         Read data from the files.
         :return: data - a set of commit message, diff code, and labels.
@@ -127,32 +127,40 @@ def createRawDataset():
 
     # initialize data.
     data, fileList = [], []
-    # read security patch data.
-    for filePath in sRAWDATADIR.glob('**/*'):
-        if not filePath.is_file() or filePath.suffix == '.zip': continue
+    if fileListInput == '':
+        # read security patch data.
+        for filePath in sRAWDATADIR.glob('**/*'):
+            if not filePath.is_file() or filePath.suffix == '.zip': continue
 
-        fileList.append(str(filePath.relative_to(PROJECT_ROOT)))
-        commitMsg = ReadCommitMsg(filePath)
-        diffLines = ReadDiffLines(filePath)
-        data.append([commitMsg, diffLines, 1])
+            fileList.append(str(filePath.relative_to(PROJECT_ROOT)))
+            commitMsg = ReadCommitMsg(filePath)
+            diffLines = ReadDiffLines(filePath)
+            data.append([commitMsg, diffLines, 1])
 
-    # read positive data.
-    for filePath in pRAWDATADIR.glob('**/*'):
-        if not filePath.is_file() or filePath.suffix == '.zip': continue
+        # read positive data.
+        for filePath in pRAWDATADIR.glob('**/*'):
+            if not filePath.is_file() or filePath.suffix == '.zip': continue
 
-        fileList.append(str(filePath.relative_to(PROJECT_ROOT)))
-        commitMsg = ReadCommitMsg(filePath)
-        diffLines = ReadDiffLines(filePath)
-        data.append([commitMsg, diffLines, 1])
+            fileList.append(str(filePath.relative_to(PROJECT_ROOT)))
+            commitMsg = ReadCommitMsg(filePath)
+            diffLines = ReadDiffLines(filePath)
+            data.append([commitMsg, diffLines, 1])
 
-    # read negative data.
-    for filePath in nRAWDATADIR.glob('**/*'):
-        if not filePath.is_file() or filePath.suffix == '.zip': continue
+        # read negative data.
+        for filePath in nRAWDATADIR.glob('**/*'):
+            if not filePath.is_file() or filePath.suffix == '.zip': continue
 
-        fileList.append(str(filePath.relative_to(PROJECT_ROOT)))
-        commitMsg = ReadCommitMsg(filePath)
-        diffLines = ReadDiffLines(filePath)
-        data.append([commitMsg, diffLines, 0])
+            fileList.append(str(filePath.relative_to(PROJECT_ROOT)))
+            commitMsg = ReadCommitMsg(filePath)
+            diffLines = ReadDiffLines(filePath)
+            data.append([commitMsg, diffLines, 0])
+    else:
+        fileList = json.loads(Path(fileListInput).read_text())
+
+        for filePath in fileList:
+            commitMsg = ReadCommitMsg(filePath)
+            diffLines = ReadDiffLines(filePath)
+            data.append([commitMsg, diffLines, 0])
 
     rawDataFilePath.write_text(json.dumps(data, indent=2))
     fileListFilePath.write_text(json.dumps(fileList, indent=2))

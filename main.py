@@ -11,10 +11,12 @@ if __name__ == '__main__':
     parser.add_argument('modelType',
                         choices=['code', 'msg', 'all', "hunk", 'allHunk'],
                         type=str)
+    parser.add_argument('--fileList', type=str, default='',
+                        help='The fileList specify the order of creating the rawDataset, thus affects the data sequences')
     args = parser.parse_args()
 
     dataset.preprocessZipData()
-    dataset.createRawDataset()
+    dataset.createRawDataset(args.fileList)
     dataset.processRawDataset()
     dataset.splitProcessedData()
 
