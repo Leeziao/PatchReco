@@ -27,7 +27,7 @@ def preprocessZipData():
             # CMD(f'rm {filePath}', path=filePath.parent)()
 
 @utils.statusNotifier
-def createRawDataset(fileListInput: str=''):
+def createRawDataset(fileListInput: str='', tgtFileListPath=fileListFilePath, tgtRawDataPath=rawDataFilePath, force=False):
     '''
         Read data from the files.
         :return: data - a set of commit message, diff code, and labels.
@@ -43,7 +43,7 @@ def createRawDataset(fileListInput: str=''):
             ]
         ]
     '''
-    if rawDataFilePath.exists() and fileListFilePath.exists(): return
+    if tgtRawDataPath.exists() and tgtFileListPath.exists() and not force: return
 
     def ReadCommitMsg(filename):
         '''
@@ -164,21 +164,23 @@ def createRawDataset(fileListInput: str=''):
             elif 'data/raw/positives' in s or 'data/raw/security_patch' in s:
                 tgtLabel = 1
             else:
-                raise ValueError("Unknown Label Rule")
+                tgtLabel = 0
+                print("Unknown Label Rule")
+                # raise ValueError("Unknown Label Rule")
             commitMsg = ReadCommitMsg(filePath)
             diffLines = ReadDiffLines(filePath)
             data.append([commitMsg, diffLines, tgtLabel])
 
-    rawDataFilePath.write_text(json.dumps(data, indent=2))
-    fileListFilePath.write_text(json.dumps(fileList, indent=2))
+    tgtRawDataPath.write_text(json.dumps(data, indent=2))
+    tgtFileListPath.write_text(json.dumps(fileList, indent=2))
     
     return data
 
 @utils.statusNotifier
-def processRawDataset():
-    if processedDataFilePath.exists(): return
+def processRawDataset(tgtFilePath=processedDataFilePath, srcFilePath=rawDataFilePath):
+    if tgtFilePath.exists(): return
 
-    rawJ = json.loads(rawDataFilePath.read_text())
+    rawJ = json.loads(srcFilePath.read_text())
 
     msgs = [j[0].strip() for j in rawJ]
     codes = [j[1] for j in rawJ]
@@ -233,7 +235,7 @@ def processRawDataset():
     hunks = [rewriteHunk(code) for code in codes]
 
     processedJ = list(zip(msgs, codes, labels, hunks))
-    processedDataFilePath.write_text(json.dumps(processedJ, indent=2))
+    tgtFilePath.write_text(json.dumps(processedJ, indent=2))
 
 @utils.statusNotifier
 def splitProcessedData(testSplit=0.1, evalSplit=0.1):
@@ -271,8 +273,8 @@ def splitProcessedData(testSplit=0.1, evalSplit=0.1):
     shuffleFileListFilePath.write_text(json.dumps(jF, indent=2))
 
 class PatchDataset:
-    def __init__(self):
-        self.dataset = json.loads(splitDataFilePath.read_text())
+    def __init__(self, datasetPath=splitDataFilePath):
+        self.dataset = json.loads(datasetPath.read_text())
         self.msgTokenizer = AutoTokenizer.from_pretrained("bert-base-uncased")
         self.codeTokenizer = AutoTokenizer.from_pretrained("neulab/codebert-cpp")
     

@@ -42,3 +42,9 @@ splitDataFilePath = DATADIR / 'splitProcessedData.json'
 fileListFilePath = RESULTDIR / 'fileList.json'
 shuffleFileListFilePath = RESULTDIR / 'fileList_shuffle.json'
 resultFilePath = RESULTDIR / 'evaluateResult.json'
+
+# --------------- PREDICT -------------------- #
+predictPatchFilePath = RESULTDIR / 'predictPatch.txt'
+predictFileListFilePath = RESULTDIR / 'predictFileList.txt'
+predictRawDataFilePath = RESULTDIR / 'predictRawData.json'
+predictProcessedDataFilePath = RESULTDIR / 'predictProcessedData.json'
